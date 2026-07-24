@@ -153,8 +153,8 @@ const card = document.getElementById('card');
 if (variant === 'radar') card.classList.add('square');
 
 document.getElementById('eyebrow').textContent  = d.eyebrow || 'Founder call review';
-document.getElementById('title').innerHTML      = d.callLabel;
-document.getElementById('overall').innerHTML    = d.overall + '<small>/10</small>';
+document.getElementById('title').innerHTML      = d.callLabel || '';
+document.getElementById('overall').innerHTML    = (d.overall ?? '?') + '<small>/10</small>';
 document.getElementById('shapeName').textContent = d.shape || '';
 document.getElementById('shapeNote').textContent = d.shapeNote || '';
 document.getElementById('footL').innerHTML      = d.footerLeft || '';
@@ -187,8 +187,8 @@ const pt  = (i, v) => [cx + Math.cos(ang(i)) * R * (v / MAX), cy + Math.sin(ang(
 const poly = v => dims.map((dm, i) => pt(i, typeof v === 'function' ? v(dm) : v).join(',')).join(' ');
 
 const rings = [2, 4, 6, 8, 10].map(v => `
-  <polygon points="${poly(v)}" fill="none" stroke="${GRID}" stroke-width="1"
-           ${v === 10 ? 'stroke-width="1.5"' : ''}/>`).join('');
+  <polygon points="${poly(v)}" fill="none" stroke="${GRID}"
+           stroke-width="${v === 10 ? 1.5 : 1}"/>`).join('');
 
 const spokes = dims.map((dm, i) => {
   const [x, y] = pt(i, MAX);

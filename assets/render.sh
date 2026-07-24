@@ -33,22 +33,61 @@ mkdir -p "$OUT"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-# Inject the data into the template (no fetch: file:// pages cannot fetch).
+# Validate, then inject the data into the template (no fetch: file:// pages cannot fetch).
+# Validation is not ceremony: a bad key renders a BLANK card and Chrome still exits 0, so
+# without this the only symptom of a typo is a silently empty PNG.
 python3 - "$HERE/scorecard.html" "$DATA" "$TMP/card.html" <<'PY'
 import json, sys
 tpl, data, out = sys.argv[1], sys.argv[2], sys.argv[3]
+
+def die(msg):
+    sys.exit("scorecard JSON: " + msg)
+
+try:
+    d = json.load(open(data))
+except json.JSONDecodeError as e:
+    die("not valid JSON (%s)" % e)
+if not isinstance(d, dict):
+    die("top level must be an object")
+for key in ("callLabel", "overall", "dimensions"):
+    if key not in d:
+        die("missing required key %r" % key)
+dims = d["dimensions"]
+if not isinstance(dims, list) or not dims:
+    die("'dimensions' must be a non-empty list")
+if not 3 <= len(dims) <= 8:
+    die("expected 3 to 8 dimensions, got %d (the card layout is fixed height)" % len(dims))
+for i, dim in enumerate(dims):
+    if not isinstance(dim, dict):
+        die("dimensions[%d] must be an object" % i)
+    for key in ("name", "score", "why"):
+        if key not in dim:
+            die("dimensions[%d] missing %r" % (i, key))
+    if not isinstance(dim["score"], (int, float)) or isinstance(dim["score"], bool):
+        die("dimensions[%d].score must be a number" % i)
+    if not 0 <= dim["score"] <= 10:
+        die("dimensions[%d].score is %r, expected 0 to 10" % (i, dim["score"]))
+
 html = open(tpl).read()
-payload = json.dumps(json.load(open(data)))
-assert "/*__DATA__*/ null" in html, "template marker missing"
+if "/*__DATA__*/ null" not in html:
+    die("template marker missing from scorecard.html")
+# json.dumps escapes neither '<' nor '/', so a literal </script> inside any string field
+# would close the <script> block early and render a blank card.
+payload = json.dumps(d).replace("</", "<\\/")
 open(out, "w").write(html.replace("/*__DATA__*/ null", payload))
 PY
 
 shot () { # variant theme w h name
-  "$CHROME" --headless=new --disable-gpu --hide-scrollbars \
+  local log="$TMP/$5.log"
+  if ! "$CHROME" --headless=new --disable-gpu --hide-scrollbars \
     --force-device-scale-factor=2 --virtual-time-budget=3000 \
     --window-size="$3,$4" --default-background-color=00000000 \
     --screenshot="$OUT/$5.png" \
-    "file://$TMP/card.html?variant=$1&theme=$2" >/dev/null 2>&1
+    "file://$TMP/card.html?variant=$1&theme=$2" >"$log" 2>&1
+  then
+    echo "chrome failed rendering $5:" >&2; cat "$log" >&2; exit 1
+  fi
+  [ -s "$OUT/$5.png" ] || { echo "chrome produced no output for $5" >&2; exit 1; }
   echo "  $OUT/$5.png"
 }
 

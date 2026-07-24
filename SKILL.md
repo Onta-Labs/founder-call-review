@@ -142,13 +142,19 @@ pleasant, unproductive call from scoring a 7.
 
 | Call type | Agenda | Frame | Discovery | Objections | Closing | Rapport | Deal-critical |
 |---|---|---|---|---|---|---|---|
-| Discovery / first call | 1 | 1 | 3 | 1 | 1.5 | 1.5 | Discovery, Closing |
-| Demo / eval | 2 | 1 | 1.5 | 2 | 2 | 1 | Agenda, Closing |
-| Pricing / negotiation | 1 | 2 | 1 | 3 | 2.5 | 1 | Objections, Closing |
+| Discovery / first call | 1 | 1 | 3.5 | 1 | 2 | 1.5 | Discovery, Closing |
+| Demo / eval | 2 | 1 | 1.5 | 2 | 2.5 | 1 | Agenda, Closing |
+| Pricing / negotiation | 1 | 2 | 1 | 3 | 2.5 | 0.5 | Objections, Closing |
 | Partnership / design partner | 2 | 1.5 | 1.5 | 1.5 | 2.5 | 1 | Agenda, Closing |
 | Investor | 1.5 | 2 | 1 | 2.5 | 2 | 1 | Frame, Objections |
 
-Weights sum to 10 in each row, so the weighted total divided by 10 is the raw score.
+Every row sums to exactly 10, so the weighted total divided by 10 is the raw score, and a
+flawless call scores 10 on every call type. If you edit the table, keep the row summing to 10
+or the scale silently stops meaning what it says.
+
+**A dimension marked "not evidenced" is dropped, never scored as a zero.** Remove its weight
+from the row and divide by the weights that remain. An absent agenda is a finding you write
+down, not a 0 that drags a real call two points below what it earned.
 
 Then apply, in order:
 

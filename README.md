@@ -49,6 +49,12 @@ git clone https://github.com/Onta-Labs/founder-call-review.git ~/.claude/skills/
 Or drop the folder into `.claude/skills/` inside a project. Then say "review my call" and
 paste the transcript.
 
+**Paste your agenda or planned ask too, if you had one.** Agenda execution is one of the six
+dimensions, and it cannot be scored against a plan the reviewer never saw. Without it that
+dimension comes back "not evidenced" rather than invented, which is correct but costs you the
+most actionable score on the card. It also sharpens closing: the most common downgrade is an
+ask that quietly softened from the one you planned.
+
 If your agent does not support skills, `SKILL.md` works fine as a plain prompt. Paste it, then
 paste the transcript.
 

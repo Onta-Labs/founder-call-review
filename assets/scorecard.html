@@ -1,0 +1,235 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Call scorecard</title>
+<style>
+  :root {
+    --surface: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --hair: #edece6;
+  }
+  :root[data-theme="dark"] {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --hair: #242422;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--plane); }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .card {
+    background: var(--surface);
+    width: 1600px; height: 900px;
+    padding: 44px 48px;
+    display: flex; flex-direction: column;
+  }
+  .card.square { width: 1200px; height: 1200px; padding: 64px; }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; }
+  .eyebrow {
+    font-size: 15px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 { font-size: 31px; font-weight: 600; letter-spacing: -.02em; margin-top: 10px; line-height: 1.2; }
+  h1 .dim { color: var(--ink-2); font-weight: 400; }
+
+  .overall { text-align: right; flex: none; }
+  .overall .num {
+    font-size: 70px; font-weight: 650; letter-spacing: -.04em; line-height: .92;
+    font-variant-numeric: tabular-nums;
+  }
+  .overall .num small { font-size: 34px; font-weight: 500; color: var(--muted); letter-spacing: -.02em; }
+  .overall .lab {
+    font-size: 13px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin-top: 8px;
+  }
+
+  .body { flex: 1; display: flex; gap: 44px; margin-top: 22px; min-height: 0; }
+  .left { width: 578px; flex: none; display: flex; flex-direction: column; align-items: center; }
+  .right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-top: 4px; }
+
+  .shape {
+    border-top: 1px solid var(--grid); padding-top: 16px; margin-top: auto; width: 100%;
+  }
+  .shape .name { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .shape .note { font-size: 15px; line-height: 1.45; color: var(--ink-2); margin-top: 6px; }
+
+  .row { padding: 9px 0; border-top: 1px solid var(--hair); }
+  .row:first-child { border-top: none; padding-top: 2px; }
+  .row .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  .row .nm { font-size: 18.5px; font-weight: 600; letter-spacing: -.01em; }
+  .row .sc { font-size: 18.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .row .sc small { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .track { height: 8px; border-radius: 4px; background: var(--grid); margin-top: 8px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 4px; }
+  .why { font-size: 14.5px; line-height: 1.42; color: var(--ink-2); margin-top: 8px; }
+
+  footer {
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--grid);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--muted);
+  }
+  footer b { color: var(--ink-2); font-weight: 600; }
+
+  /* square / radar-only variant */
+  .square .body { flex-direction: column; gap: 0; align-items: center; }
+  .square .left { width: 100%; align-items: center; }
+  .square .shape { text-align: center; width: 100%; }
+  .square .shape .name { font-size: 32px; }
+  .square .shape .note { font-size: 17.5px; max-width: 840px; margin: 9px auto 0; }
+
+  text { font-family: inherit; }
+</style>
+
+<body>
+<div class="card" id="card">
+  <header>
+    <div>
+      <div class="eyebrow" id="eyebrow">Founder call review</div>
+      <h1 id="title"></h1>
+    </div>
+    <div class="overall">
+      <div class="num" id="overall"></div>
+      <div class="lab">Overall</div>
+    </div>
+  </header>
+
+  <div class="body">
+    <div class="left">
+      <div id="radar"></div>
+      <div class="shape">
+        <div class="name" id="shapeName"></div>
+        <div class="note" id="shapeNote"></div>
+      </div>
+    </div>
+    <div class="right" id="rows"></div>
+  </div>
+
+  <footer>
+    <div id="footL"></div>
+    <div id="footR"></div>
+  </footer>
+</div>
+
+<script>
+/* eslint-disable */
+const DATA = /*__DATA__*/ null;
+
+const params    = new URLSearchParams(location.search);
+const theme     = params.get('theme') === 'dark' ? 'dark' : 'light';
+const variant   = params.get('variant') === 'radar' ? 'radar' : 'full';
+document.documentElement.dataset.theme = theme;
+
+/* Sequential single-hue ordinal ramp, validated (see dataviz references/palette.md).
+   Light surface: more is darker. Dark surface: more is lighter. */
+const RAMP = {
+  light: ['#86b6ef', '#5598e7', '#2a78d6', '#184f95'],
+  dark:  ['#184f95', '#256abf', '#3987e5', '#86b6ef'],
+};
+const bucket = s => (s < 4 ? 0 : s < 6 ? 1 : s < 8 ? 2 : 3);
+const hue    = s => RAMP[theme][bucket(s)];
+const INK    = theme === 'dark' ? '#ffffff' : '#0b0b0b';
+const INK2   = theme === 'dark' ? '#c3c2b7' : '#52514e';
+const MUTED  = '#898781';
+const GRID   = theme === 'dark' ? '#2c2c2a' : '#e1e0d9';
+const SURF   = theme === 'dark' ? '#1a1a19' : '#fcfcfb';
+const ACCENT = theme === 'dark' ? '#3987e5' : '#2a78d6';
+
+const d = DATA;
+const dims = d.dimensions;
+const N = dims.length;
+
+const card = document.getElementById('card');
+if (variant === 'radar') card.classList.add('square');
+
+document.getElementById('eyebrow').textContent  = d.eyebrow || 'Founder call review';
+document.getElementById('title').innerHTML      = d.callLabel;
+document.getElementById('overall').innerHTML    = d.overall + '<small>/10</small>';
+document.getElementById('shapeName').textContent = d.shape || '';
+document.getElementById('shapeNote').textContent = d.shapeNote || '';
+document.getElementById('footL').innerHTML      = d.footerLeft || '';
+document.getElementById('footR').innerHTML      = d.footerRight || '';
+
+/* ---------- rows (ranked bars, magnitude) ---------- */
+if (variant === 'full') {
+  const rows = [...dims].sort((a, b) => a.score - b.score);
+  document.getElementById('rows').innerHTML = rows.map(r => `
+    <div class="row">
+      <div class="top">
+        <div class="nm">${r.name}</div>
+        <div class="sc" style="color:${INK}">${r.score}<small>/10</small></div>
+      </div>
+      <div class="track"><div class="fill" style="width:${r.score * 10}%;background:${hue(r.score)}"></div></div>
+      <div class="why">${r.why}</div>
+    </div>`).join('');
+} else {
+  document.getElementById('rows').remove();
+}
+
+/* ---------- radar (the call SHAPE) ---------- */
+const R      = variant === 'radar' ? 248 : 168;
+const PAD    = variant === 'radar' ? 112 : 100;
+const SIZE   = (R + PAD) * 2;
+const cx = SIZE / 2, cy = SIZE / 2;
+const MAX = 10;
+const ang = i => (-Math.PI / 2) + (i * 2 * Math.PI / N);
+const pt  = (i, v) => [cx + Math.cos(ang(i)) * R * (v / MAX), cy + Math.sin(ang(i)) * R * (v / MAX)];
+const poly = v => dims.map((dm, i) => pt(i, typeof v === 'function' ? v(dm) : v).join(',')).join(' ');
+
+const rings = [2, 4, 6, 8, 10].map(v => `
+  <polygon points="${poly(v)}" fill="none" stroke="${GRID}" stroke-width="1"
+           ${v === 10 ? 'stroke-width="1.5"' : ''}/>`).join('');
+
+const spokes = dims.map((dm, i) => {
+  const [x, y] = pt(i, MAX);
+  return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${GRID}" stroke-width="1"/>`;
+}).join('');
+
+const LOFF = variant === 'radar' ? 38 : 30;
+const labels = dims.map((dm, i) => {
+  const a = ang(i);
+  const x = cx + Math.cos(a) * (R + LOFF);
+  const y = cy + Math.sin(a) * (R + LOFF);
+  const c = Math.cos(a);
+  const anchor = Math.abs(c) < 0.15 ? 'middle' : (c > 0 ? 'start' : 'end');
+  const fs  = variant === 'radar' ? 22 : 17;
+  const fs2 = variant === 'radar' ? 26 : 20;
+  return `
+    <text x="${x}" y="${y}" text-anchor="${anchor}" fill="${INK2}"
+          font-size="${fs}" font-weight="600" letter-spacing="-.01em">${dm.short || dm.name}</text>
+    <text x="${x}" y="${y + fs2 + 3}" text-anchor="${anchor}" fill="${hue(dm.score)}"
+          font-size="${fs2}" font-weight="650" style="font-variant-numeric:tabular-nums">${dm.score}</text>`;
+}).join('');
+
+const dots = dims.map((dm, i) => {
+  const [x, y] = pt(i, dm.score);
+  const r = variant === 'radar' ? 8 : 6.5;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${ACCENT}" stroke="${SURF}" stroke-width="2"/>`;
+}).join('');
+
+document.getElementById('radar').innerHTML = `
+  <svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" role="img"
+       aria-label="Radar of six call dimensions scored out of ten">
+    ${rings}${spokes}
+    <polygon points="${poly(dm => dm.score)}" fill="${ACCENT}" fill-opacity="${theme === 'dark' ? 0.26 : 0.16}"
+             stroke="${ACCENT}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dots}${labels}
+    <text x="${cx + 9}" y="${cy - R + 17}" fill="${MUTED}" font-size="${variant === 'radar' ? 15 : 13}">10</text>
+  </svg>`;
+
+if (variant === 'radar') {
+  document.querySelector('.left').style.flex = '1';
+  document.querySelector('.left').style.justifyContent = 'center';
+}
+document.documentElement.dataset.ready = '1';
+</script>

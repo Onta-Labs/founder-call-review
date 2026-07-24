@@ -1,0 +1,47 @@
+{
+  "eyebrow": "Founder call review",
+  "callLabel": "Design partner call <span class='dim'>· sample output</span>",
+  "overall": 5,
+  "shape": "The Advisor Trap",
+  "shapeNote": "Rapport and discovery were strong, agenda and frame were not. They liked you and they coached you, and you spent the call in their meeting instead of yours.",
+  "footerLeft": "<b>Scored against anchors,</b> weighted for a partnership call, then capped at the weakest deal-critical dimension plus 3.",
+  "footerRight": "/founder-call-review",
+  "dimensions": [
+    {
+      "name": "Agenda execution",
+      "short": "Agenda",
+      "score": 4,
+      "why": "Two of four planned segments ran. Pricing was never opened, and the pilot scope doc was mentioned but never put on screen."
+    },
+    {
+      "name": "Frame control",
+      "short": "Frame",
+      "score": 3,
+      "why": "They set the topic order from 06:10 onward. You answered fourteen questions in a row without asking one back."
+    },
+    {
+      "name": "Discovery and listening",
+      "short": "Discovery",
+      "score": 8,
+      "why": "You got the renewal date, the name of the internal champion, and the number they have to beat, in their own words."
+    },
+    {
+      "name": "Objection handling",
+      "short": "Objections",
+      "score": 4,
+      "why": "Two objections answered cleanly, but the security review was accepted as a fact with no test of who owns it or how long it normally takes."
+    },
+    {
+      "name": "Closing",
+      "short": "Closing",
+      "score": 5,
+      "why": "The ask came at 51:40 with four minutes left. The next step has an owner but no date, so nothing is actually scheduled."
+    },
+    {
+      "name": "Rapport",
+      "short": "Rapport",
+      "score": 8,
+      "why": "They volunteered a peer introduction unprompted and stayed nine minutes past the hour."
+    }
+  ]
+}
